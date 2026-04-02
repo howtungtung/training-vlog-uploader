@@ -198,23 +198,29 @@ program
         privacyStatus: opts.privacy as 'private' | 'unlisted' | 'public',
       }));
 
-      log('Starting YouTube upload...');
-      const uploadResult = await uploadMultipleToYouTube(uploadOptions, config);
-      logSuccess(`Uploaded ${uploadResult.succeeded.length}/${uploadOptions.length} video(s)`);
-
-      // === PLAYLIST PHASE ===
+      // === UPLOAD + PLAYLIST PHASE (each video added to playlist immediately after upload) ===
       const playlistId = opts.playlist ?? config.youtube.defaultPlaylistId;
       let playlistUrl: string | undefined;
+      let playlistTitle: string | undefined;
 
-      if (playlistId && uploadResult.succeeded.length > 0) {
-        log(`Adding videos to playlist: ${playlistId}`);
+      if (playlistId) {
         const plInfo = await getPlaylistInfo(playlistId, config);
         playlistUrl = plInfo.playlistUrl;
-        logSuccess(`Playlist: ${plInfo.playlistTitle}`);
-
-        const videoIds = uploadResult.succeeded.map((v) => v.videoId);
-        await addVideosToPlaylist(videoIds, playlistId, config);
+        playlistTitle = plInfo.playlistTitle;
+        log(`Playlist: ${playlistTitle}`);
       }
+
+      log('Starting YouTube upload...');
+      const uploadResult = await uploadMultipleToYouTube(uploadOptions, config, async (result) => {
+        if (playlistId) {
+          try {
+            await addVideosToPlaylist([result.videoId], playlistId, config);
+          } catch (err) {
+            logWarn(`Failed to add ${result.title} to playlist: ${err instanceof Error ? err.message : err}`);
+          }
+        }
+      });
+      logSuccess(`Uploaded ${uploadResult.succeeded.length}/${uploadOptions.length} video(s)`);
 
       // === CLEANUP PHASE ===
       if (!opts.keepFiles && !opts.uploadOnly) {

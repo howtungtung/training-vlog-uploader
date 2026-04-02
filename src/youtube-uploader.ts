@@ -96,6 +96,7 @@ export async function uploadToYouTube(
 export async function uploadMultipleToYouTube(
   files: YouTubeUploadOptions[],
   config: AppConfig,
+  onUploaded?: (result: YouTubeUploadResult) => Promise<void>,
 ): Promise<{ succeeded: YouTubeUploadResult[]; failed: { title: string; error: string }[] }> {
   const succeeded: YouTubeUploadResult[] = [];
   const failed: { title: string; error: string }[] = [];
@@ -104,6 +105,7 @@ export async function uploadMultipleToYouTube(
     try {
       const result = await uploadToYouTube(file, config);
       succeeded.push(result);
+      if (onUploaded) await onUploaded(result);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       logError(`Failed to upload ${file.title}: ${errorMsg}`);
