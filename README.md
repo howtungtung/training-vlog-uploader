@@ -101,6 +101,11 @@ See [.env.example](.env.example) for all available settings:
 3. Send `/start` to your new bot (required before it can message you)
 4. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env`
 
+Notification behavior:
+
+- **Per-video notification** — sent immediately after each video is uploaded (and added to playlist)
+- **Final summary** — sent after all uploads complete, with full results and total time
+
 ## Project Structure
 
 ```
@@ -129,6 +134,7 @@ npm start -- --test-notify    # Send test Telegram notification
 
 ## Notes
 
+- Each video is added to the playlist immediately after upload (not batched at the end)
 - Samsung Cloud share links expire after a few days
 - YouTube API has a daily quota (~10,000 units; each upload costs 1,600 units)
 - `credentials/` and `.env` are gitignored and must never be committed

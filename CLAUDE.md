@@ -35,6 +35,8 @@ CLI tool that downloads videos from Samsung Cloud Quick Share and uploads them t
 - Samsung download uses Playwright to extract `ShareLink.globals` from page context, then downloads via `fetch` with browser cookies
 - YouTube upload uses `googleapis` SDK with resumable upload
 - Telegram notification is a plain HTTP POST, no SDK — failures are non-fatal (warn and continue)
+- Telegram sends per-video notification (via `sendTelegramText`) after each upload + a final summary (via `sendTelegramNotification`)
+- Each video is added to the playlist immediately after upload via `onUploaded` callback in `uploadMultipleToYouTube`
 - Download directory has a configurable max size (`DOWNLOAD_MAX_SIZE_MB`); oldest files are deleted when exceeded
 
 ## Testing
