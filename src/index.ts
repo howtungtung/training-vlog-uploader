@@ -36,6 +36,8 @@ program
   .option('--dry-run', 'Show file info without executing')
   .option('--verbose', 'Show detailed logs')
   .option('--pin <code>', '6-digit PIN for protected share links')
+  .option('--test-upload', 'Test YouTube upload with a small sample video')
+  .option('--test-notify', 'Test Telegram notification with sample data')
   .action(async (samsungUrl: string | undefined, opts) => {
     const startTime = Date.now();
     const config = loadConfig();
@@ -44,6 +46,66 @@ program
       // --auth: run OAuth flow and exit
       if (opts.auth) {
         await authorize(config);
+        return;
+      }
+
+      // --test-notify: send a test Telegram notification and exit
+      if (opts.testNotify) {
+        if (!config.telegram.enabled) {
+          logError('Telegram not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env');
+          process.exit(1);
+        }
+        log('Sending test Telegram notification...');
+        const testPayload: NotifyPayload = {
+          samsungUrl: 'https://quickshare.samsungcloud.com/test',
+          downloadedFiles: 2,
+          uploadedVideos: [
+            { title: 'test_video_1.mp4', url: 'https://youtu.be/dQw4w9WgXcQ' },
+            { title: 'test_video_2.mp4', url: 'https://youtu.be/dQw4w9WgXcQ' },
+          ],
+          playlistUrl: 'https://www.youtube.com/playlist?list=PLtest',
+          totalDuration: '3 分 21 秒',
+        };
+        await sendTelegramNotification(
+          { botToken: config.telegram.botToken, chatId: config.telegram.chatId },
+          testPayload,
+        );
+        logSuccess('Test Telegram notification sent! Check your Telegram.');
+        return;
+      }
+
+      // --test-upload: download a sample video and upload to YouTube
+      if (opts.testUpload) {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const { ensureDir } = await import('./utils.js');
+
+        await ensureDir(config.download.dir);
+        const samplePath = path.join(config.download.dir, 'test_sample.mp4');
+
+        log('Downloading sample video (Big Buck Bunny, ~770 KB)...');
+        const resp = await fetch('https://www.w3schools.com/html/mov_bbb.mp4');
+        if (!resp.ok) throw new Error(`Failed to download sample video: HTTP ${resp.status}`);
+        const buffer = Buffer.from(await resp.arrayBuffer());
+        await fs.promises.writeFile(samplePath, buffer);
+        logSuccess(`Sample video saved: ${samplePath} (${(buffer.length / 1024).toFixed(0)} KB)`);
+
+        log('Uploading sample video to YouTube (private)...');
+        const { uploadToYouTube } = await import('./youtube-uploader.js');
+        const result = await uploadToYouTube(
+          {
+            filePath: samplePath,
+            title: `Test Upload - ${new Date().toISOString().slice(0, 19)}`,
+            description: 'Test upload from samsung-to-youtube CLI',
+            privacyStatus: 'private',
+          },
+          config,
+        );
+        logSuccess(`Test upload complete! → ${result.url}`);
+
+        // Cleanup
+        await fs.promises.unlink(samplePath);
+        log('Cleaned up sample video');
         return;
       }
 

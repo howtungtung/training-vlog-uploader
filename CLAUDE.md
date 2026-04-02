@@ -8,8 +8,10 @@ CLI tool that downloads videos from Samsung Cloud Quick Share and uploads them t
 
 - `npm start -- <url> [options]` — Run the full pipeline
 - `npm run auth` — OAuth2 authorization flow
-- `npm test` — Run tests with vitest
+- `npm test` — Run unit tests with vitest
 - `npm run test:watch` — Watch mode tests
+- `npm start -- --test-upload` — Integration test: download sample video + upload to YouTube (private)
+- `npm start -- --test-notify` — Integration test: send test Telegram notification
 
 ## Architecture
 
@@ -38,7 +40,10 @@ CLI tool that downloads videos from Samsung Cloud Quick Share and uploads them t
 ## Testing
 
 - Test framework: vitest
-- Test files go in `spec/` or alongside source
+- Unit test files in `tests/` directory
+- Integration tests via CLI flags (`--test-upload`, `--test-notify`) — require OAuth credentials and Telegram config respectively
+- `--test-upload` downloads a ~770KB sample video (Big Buck Bunny) and uploads to YouTube as private, then cleans up
+- `--test-notify` sends a mock success notification to Telegram with sample data
 
 ## Sensitive Files (never commit)
 

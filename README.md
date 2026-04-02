@@ -52,6 +52,8 @@ Options:
   --dry-run               Show file info without executing
   --verbose               Show detailed logs
   --pin <code>            6-digit PIN for protected share links
+  --test-upload           Test YouTube upload with a small sample video
+  --test-notify           Test Telegram notification with sample data
 ```
 
 ### Examples
@@ -117,8 +119,12 @@ src/
 ## Testing
 
 ```bash
-npm test            # Run tests once
+npm test            # Run unit tests
 npm run test:watch  # Watch mode
+
+# Integration tests (require OAuth credentials)
+npm start -- --test-upload    # Download sample video + upload to YouTube (private)
+npm start -- --test-notify    # Send test Telegram notification
 ```
 
 ## Notes
