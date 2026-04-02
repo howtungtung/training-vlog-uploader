@@ -77,6 +77,50 @@ export function formatMessage(payload: NotifyPayload): string {
   return lines.join('\n');
 }
 
+export function formatSingleVideoMessage(
+  title: string,
+  url: string,
+  index: number,
+  total: number,
+  playlistTitle?: string,
+): string {
+  const lines = [
+    `🎬 上傳完成 (${index}/${total})`,
+    '',
+    `${title}`,
+    `→ ${url}`,
+  ];
+  if (playlistTitle) {
+    lines.push(`📋 已加入: ${playlistTitle}`);
+  }
+  return lines.join('\n');
+}
+
+export async function sendTelegramText(
+  options: TelegramNotifyOptions,
+  text: string,
+): Promise<void> {
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${options.botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: options.chatId,
+          text,
+        }),
+      },
+    );
+    if (!response.ok) {
+      const error = (await response.json()) as { description?: string };
+      console.warn(`[WARN] Telegram notification failed: ${error.description ?? response.statusText}`);
+    }
+  } catch {
+    console.warn('[WARN] Telegram notification failed, skipping');
+  }
+}
+
 export async function sendTelegramNotification(
   options: TelegramNotifyOptions,
   payload: NotifyPayload,

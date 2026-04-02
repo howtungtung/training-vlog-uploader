@@ -15,7 +15,7 @@ import {
 import { downloadFromSamsung } from './samsung-downloader.js';
 import { uploadMultipleToYouTube, type YouTubeUploadOptions } from './youtube-uploader.js';
 import { getPlaylistInfo, addVideosToPlaylist, listUserPlaylists } from './youtube-playlist.js';
-import { sendTelegramNotification, type NotifyPayload } from './telegram-notifier.js';
+import { sendTelegramNotification, sendTelegramText, formatSingleVideoMessage, type NotifyPayload } from './telegram-notifier.js';
 import { authorize } from './youtube-auth.js';
 
 const program = new Command();
@@ -211,13 +211,25 @@ program
       }
 
       log('Starting YouTube upload...');
+      let uploadedCount = 0;
+      const totalCount = uploadOptions.length;
+      const canNotify = opts.notify !== false && config.telegram.enabled;
+      const telegramOpts = { botToken: config.telegram.botToken, chatId: config.telegram.chatId };
+
       const uploadResult = await uploadMultipleToYouTube(uploadOptions, config, async (result) => {
+        uploadedCount++;
+
         if (playlistId) {
           try {
             await addVideosToPlaylist([result.videoId], playlistId, config);
           } catch (err) {
             logWarn(`Failed to add ${result.title} to playlist: ${err instanceof Error ? err.message : err}`);
           }
+        }
+
+        if (canNotify) {
+          const msg = formatSingleVideoMessage(result.title, result.url, uploadedCount, totalCount, playlistTitle);
+          await sendTelegramText(telegramOpts, msg);
         }
       });
       logSuccess(`Uploaded ${uploadResult.succeeded.length}/${uploadOptions.length} video(s)`);
