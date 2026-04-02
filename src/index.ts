@@ -103,6 +103,15 @@ program
         );
         logSuccess(`Test upload complete! → ${result.url}`);
 
+        // Add to playlist if specified
+        const testPlaylistId = opts.playlist ?? config.youtube.defaultPlaylistId;
+        if (testPlaylistId && testPlaylistId !== 'list') {
+          log(`Adding to playlist: ${testPlaylistId}`);
+          const plInfo = await getPlaylistInfo(testPlaylistId, config);
+          await addVideosToPlaylist([result.videoId], testPlaylistId, config);
+          logSuccess(`Added to playlist: ${plInfo.playlistTitle} → ${plInfo.playlistUrl}`);
+        }
+
         // Cleanup
         await fs.promises.unlink(samplePath);
         log('Cleaned up sample video');
