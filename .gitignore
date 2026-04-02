@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+credentials/client_secrets.json
+credentials/tokens.json
+downloads/*.mp4
+downloads/*.mkv
+downloads/*.avi
+downloads/*.mov
+.DS_Store
