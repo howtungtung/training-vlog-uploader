@@ -15,6 +15,7 @@ export interface AppConfig {
     dir: string;
     timeout: number;
     retryCount: number;
+    maxSizeMB: number;
   };
   youtube: {
     categoryId: string;
@@ -47,6 +48,7 @@ export function loadConfig(): AppConfig {
       dir: process.env.DOWNLOAD_DIR ?? './downloads',
       timeout: parseInt(process.env.DOWNLOAD_TIMEOUT ?? '300000', 10),
       retryCount: parseInt(process.env.DOWNLOAD_RETRY_COUNT ?? '3', 10),
+      maxSizeMB: parseInt(process.env.DOWNLOAD_MAX_SIZE_MB ?? '5120', 10),
     },
     youtube: {
       categoryId: process.env.YOUTUBE_CATEGORY_ID ?? '22',

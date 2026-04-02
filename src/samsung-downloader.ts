@@ -2,7 +2,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 import { SingleBar, Presets } from 'cli-progress';
-import { isVideoFile, log, logSuccess, logError, logWarn, ensureDir } from './utils.js';
+import { isVideoFile, log, logSuccess, logError, logWarn, ensureDir, enforceStorageLimit } from './utils.js';
 import { LinkExpiredError, LinkBlockedError, LinkCancelledError } from './errors.js';
 import type { AppConfig } from './config.js';
 
@@ -141,6 +141,7 @@ export async function downloadFromSamsung(
   pin?: string,
 ): Promise<DownloadResult[]> {
   await ensureDir(config.download.dir);
+  await enforceStorageLimit(config.download.dir, config.download.maxSizeMB);
 
   log(`Launching browser to load: ${samsungUrl}`);
   const browser: Browser = await chromium.launch({

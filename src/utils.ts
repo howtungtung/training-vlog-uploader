@@ -90,6 +90,36 @@ export async function checkDiskSpace(dir: string, requiredBytes: number): Promis
   }
 }
 
+export async function enforceStorageLimit(dir: string, maxSizeMB: number): Promise<void> {
+  if (maxSizeMB <= 0) return;
+
+  const maxBytes = maxSizeMB * 1024 * 1024;
+  const entries = await fs.promises.readdir(dir);
+
+  const files: { name: string; path: string; size: number; mtimeMs: number }[] = [];
+  for (const entry of entries) {
+    if (entry === '.gitkeep') continue;
+    const filePath = path.join(dir, entry);
+    const stat = await fs.promises.stat(filePath);
+    if (stat.isFile()) {
+      files.push({ name: entry, path: filePath, size: stat.size, mtimeMs: stat.mtimeMs });
+    }
+  }
+
+  let totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  if (totalSize <= maxBytes) return;
+
+  // Sort oldest first
+  files.sort((a, b) => a.mtimeMs - b.mtimeMs);
+
+  for (const file of files) {
+    if (totalSize <= maxBytes) break;
+    await fs.promises.unlink(file.path);
+    totalSize -= file.size;
+    logWarn(`Storage limit: deleted old file ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
+  }
+}
+
 export function generateDescription(samsungUrl: string): string {
   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
   return `透過 Samsung Cloud Quick Share 自動上傳\n來源: ${samsungUrl}\n上傳時間: ${timestamp}`;

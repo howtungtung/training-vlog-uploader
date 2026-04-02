@@ -1,10 +1,8 @@
 node_modules/
 dist/
 .env
-credentials/client_secrets.json
-credentials/tokens.json
-downloads/*.mp4
-downloads/*.mkv
-downloads/*.avi
-downloads/*.mov
+credentials/*
+!credentials/.gitkeep
+downloads/*
+!downloads/.gitkeep
 .DS_Store
